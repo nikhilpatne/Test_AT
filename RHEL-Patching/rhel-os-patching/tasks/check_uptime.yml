@@ -1,0 +1,52 @@
+--- 
+- block:
+    - name: To check Uptime of machine.
+      shell: if [[   $(( ( $(date -d  $(date +"%Y-%m-%d %T" | awk '{print $1}') '+%s') - $(date -d  $(uptime -s  | awk '{print $1}') '+%s') )/(60*60*24) )) -gt {{ uptime_limit }} ]]; then echo "uptime_execeded"; else echo "lesser_uptime";fi
+      ignore_errors: true
+      register: uptime_status
+
+    - name: Including details of uptime on log file
+      include: log_file.yml
+      vars:
+        content: "Uptime of the system is {{uptime_status}}"
+        status: "INFO"
+  rescue:
+    - name: Sending an email when failed to get uptime of machine.
+      include_role:
+        name: common/send-email
+      vars:
+        mail_subject: Failed to get uptime of machine.
+        mail_body: '<p>Hi Team,</p> <br><p>There are some problems while getting uptime of host <b> {{ inventory_hostname }} </b></p>'
+
+    - name: Including details in log files about uptime
+      include: log_file.yml
+      vars:
+        content: "Something went wrong while getting uptime of machine. Cannot find the Uptime of the system"
+        status: "ERROR"    
+
+    - name: Failed to check process status
+      fail:
+        msg: "Something went wrong while getting uptime of machine"
+
+- name: To display Uptime status
+  debug:
+      msg: "{{ uptime_status.stdout }}"
+  run_once: true
+
+- name: Rebooting the system
+  include: reboot-system.yml
+  when: uptime_status.stdout == "uptime_execeded"
+  
+- name: Including details when reboot is required
+  include: log_file.yml
+  vars:
+      content: "Rebooting the system when uptime is less than required"
+      status: "INFO"
+  when: uptime_status.stdout == "uptime_execeded"
+
+- name: Including details when reboot is not required
+  include: log_file.yml
+  vars:
+      content: "Reboot not required , uptime of the machine is below the threshold."
+      status: "INFO"
+  when: uptime_status.stdout != "uptime_execeded"
