@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  #become: sudo
+  #connection: local
+  vars:
+   ip_list: []
+  tasks:
+      - name: Include roles
+        block:
+            - include_role:
+               name: launch_scan
+
+            - include_role:
+               name: generate_report
+        always:
+          - name: Create log file
+            include: generate_report/tasks/logs.yml
+   

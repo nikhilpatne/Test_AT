@@ -1,0 +1,107 @@
+---   
+ - name: Include vars file
+   include_vars: ../vars/vars.yml
+   no_log: True
+
+ - name: Include request vars file
+   include_vars: ../vars/request_vars.yml
+   no_log: True
+   
+ - name: Split ip addr elements {{date}} {{time}}
+   set_fact:
+      ip_list: "{{ ip_address.split(',') }}"
+ - debug: 
+     msg: "ips list is {{ ip_list }}" 
+
+ - block:
+    - name: Get Scan Engines {{date}} {{time}}
+      uri:
+        url: https://{{ insightvm_host }}/api/3/scan_engines
+        user: "{{ insightvm_user }}"
+        password: "{{ insightvm_password }}"
+        validate_certs: no
+        method: GET
+        force_basic_auth: yes
+        status_code: 200
+      register: scan_engines
+    - debug:
+        msg: "scan site name is {{ scan_engines }}"
+
+    - name: Get Scan Engine ID {{date}} {{time}}
+      set_fact:
+        scan_eng_id: "{{ item.id }}"
+      with_items: "{{ scan_engines.json.resources }}"
+      when: item.name == "{{ scan_engine_name }}"
+    - debug:
+        msg: "id is {{ scan_eng_id }}"
+
+    - name: Get Scan sites {{date}} {{time}}
+      uri:
+        url: https://{{ insightvm_host }}/api/3/sites
+        user: "{{insightvm_user }}"
+        password: "{{ insightvm_password }}"
+        validate_certs: no
+        method: GET
+        force_basic_auth: yes
+        status_code: 200
+      register: scan_sites
+    - debug:
+        msg: "scan site name is {{ scan_sites }}"
+
+    - name: Get Scan Site ID {{date}} {{time}}
+      set_fact:
+        scan_site_id: "{{ item.id }}"
+      with_items: "{{ scan_sites.json.resources }}"
+      when: item.name == "{{ scan_site_name }}"
+    - debug:
+        msg: "scan site name is {{ scan_site_id }}"
+  
+ 
+    - name: Get Scan templates {{date}} {{time}}
+      uri:
+        url: https://{{ insightvm_host }}/api/3/scan_templates
+        user: "{{insightvm_user }}"
+        password: "{{ insightvm_password }}"
+        validate_certs: no
+        method: GET
+        force_basic_auth: yes
+        status_code: 200
+      register: scan_templates
+    - debug:
+        msg: "scan template is {{ scan_templates }}"
+
+    - name: Get Scan Template ID {{date}} {{time}}
+      set_fact:
+       scan_template_id: "{{ item.id }}"
+      with_items: "{{ scan_templates.json.resources }}"
+      when: 'item.name == "{{ scan_template }}"'
+    - debug:
+        msg: "scan template id is {{ scan_template_id }}"
+
+    - debug:
+        msg: "Scan site id={{scan_site_id}}, scan eng id={{scan_eng_id}}, scan template id={{scan_template_id}}, ip_addrs passed={{ ip_address }}"
+
+   rescue:
+    # - name: Create a log file for scan process
+    #    include: generate_report/tasks/logs.yml
+    - name: Send an email if any task fails {{date}} {{time}}
+      include_role:
+       name: common/send_email
+      vars:
+       mail_subject: Failed to launch scan on requested site
+       mail_body: 'Hi team, requested scan was not triggered on this site {{scan_site}}.'
+      # mail:
+      #  host: smtp.gmail.com
+      #  port: 587
+      #  username: "{{smtp_username}}"
+      #  password: "{{smtp_password}}"
+      #  to: "{{ email_id }}"
+      #  subject: Failed to launch scan on requested site
+      #  body: 'Hi team, requested scan was not triggered on this site {{scan_site}}.'
+      # delegate_to: localhost
+          
+    - name: Abort this role tasks execution if no scan was triggered {{date}} {{time}}
+      fail:
+        msg: Aboring playbook execution, as scan launch failed
+      when: '{{scan_site_id}} == '' or {{scan_eng_id}} == '' or {{scan_template_id}} == '' or {{ ip_address }} == ''   '
+    
