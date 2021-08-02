@@ -1,6 +1,6 @@
 request_with_ip: {
       "engineId": "{{scan_eng_id}}",
-      "hosts": "{{ ip_list }}",
+      "hosts": "{{ valid_ip_list }}",
      "name": "{{scan_name}}",
      "templateId": "{{ scan_template_id }}"
      }
@@ -13,3 +13,4 @@ request_full_scan: {
 
 date: "{{ lookup('pipe', 'date +%Y-%m-%d')}}"
 time: "{{ lookup('pipe', 'date +%H:%M:%S')}}"
+#valid_ip_list: []

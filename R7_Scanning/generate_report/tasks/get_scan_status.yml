@@ -38,7 +38,7 @@
          name:  common/send_email
         vars:
          mail_subject: Failed to get scan status of {{scan_name}}
-         mail_body: 'Hi team, requested scan status could not be fetched for {{scan_site}} and scan name {{scan_name}} .'
+         mail_body: 'Requested scan status could not be fetched for {{scan_site}} and scan name {{scan_name}} .'
         # mail:
         #  host: smtp.gmail.com
         #  port: 587
@@ -52,6 +52,6 @@
       - name: Abort this role tasks execution if no scan was triggered {{date}} {{time}}
         fail:
           msg: Aboring playbook execution, as scan launch failed
-        when: '{{ scan_status.status }} != 200'
+        when:  scan_status.status != 200
      
  

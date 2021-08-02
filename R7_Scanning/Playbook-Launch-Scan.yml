@@ -4,6 +4,9 @@
   #connection: local
   vars:
    ip_list: []
+   valid_ip_list: []
+   final_ip_list: []
+   vulnerable_ips: []
   tasks:
       - name: Include roles
         block:

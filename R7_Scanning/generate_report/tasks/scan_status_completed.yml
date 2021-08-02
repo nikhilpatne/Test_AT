@@ -21,7 +21,7 @@
         #    file_content: "{{ lookup('file', 'generate_report/files/sql-query.txt') }}"
 
         - name: Format the file query contents {{date}} {{time}}
-          shell: python3 generate_report/files/format-sql.py
+          shell: python2 generate_report/files/format-sql.py
           register: formatted_file
         - debug:
            msg: "{{formatted_file.stdout}}"
@@ -38,8 +38,8 @@
            body_format: json
            body:  '{ 
            "filters": {
-           "severity": "critical",
-           "statuses": ["vulnerable"]
+           "severity": "all",
+           "statuses": ["vulnerable","vulnerable","potentially-vulnerable"]
           },
           "format": "sql-query",
           "language": "en-US",
@@ -81,7 +81,7 @@
         
         - name: Delay some time for report generation {{date}} {{time}}
           wait_for: 
-           timeout: 120
+           timeout: 128
     
         - name: Create a directory to store scanned reports {{date}} {{time}}
           file:
@@ -92,43 +92,49 @@
         - name: Download the scan report {{date}} {{time}}
           include: download_report.yml
 
+        - include_tasks: get_vulnerable_assets.yml
+          loop: "{{ valid_ip_list }}"
         
-   
-        - name: Fetch scanned assets for any critical vulnerabilities {{date}} {{time}}
-          uri:
-           url: https://{{insightvm_host}}/api/3/sites/{{ scan_site_id }}/assets
-           user: "{{ insightvm_user }}"
-           password: "{{ insightvm_password }}"
-           validate_certs: no
-           method: GET
-           force_basic_auth: yes
-          register: site_assets
-
-        - name: copy the output to a local file {{date}} {{time}}
-          copy:
-           content: "{{  site_assets.json }}"
-           dest: "./site-assets.json"
-          delegate_to: localhost
-  
-        - name: Parsing the output {{date}} {{time}}
-          shell: python3 generate_report/files/parse-json.py "{{scan_id}}"
-          register: output
         - debug:
-           var: "{{ output.stdout_lines }}"
+           msg: "{{ vulnerable_ips }}"
+   
+        # - name: Fetch scanned assets for any critical vulnerabilities {{date}} {{time}}
+        #   uri:
+        #    #url: https://{{insightvm_host}}/api/3/sites/{{ scan_site_id }}/assets
+        #    url: https://{{insightvm_host}}/api/3/sites/{{ scan_site_id }}/assets?size=800
+        #    user: "{{ insightvm_user }}"
+        #    password: "{{ insightvm_password }}"
+        #    validate_certs: no
+        #    method: GET
+        #    force_basic_auth: yes
+        #    timeout: 2408
+        #   register: site_assets
+
+        # - name: copy the output to a local file {{date}} {{time}}
+        #   copy:
+        #    content: "{{  site_assets.json }}"
+        #    dest: "./site-assets.json"
+        #   delegate_to: localhost
+  
+        # - name: Parsing the output {{date}} {{time}}
+        #   shell: python2 generate_report/files/parse-json.py "{{scan_id}}"
+        #   register: output
+        # - debug:
+        #    msg: "{{ output.stdout_lines }}"
   
         - name: check ips {{date}} {{time}}
           set_fact:
-           flag: "{{ ( output.stdout_lines | length > 0) | ternary('true', 'false') }}"
+           flag: "{{ ( vulnerable_ips | length > 0) | ternary('true', 'false') }}"
         - debug:
            msg : "flag value is {{ flag }}"
-       when: '"{{ scan_state }}" == "finished"'
+       when:  scan_state  == "finished"
     rescue: 
        - name: Send an email if any task fails {{date}} {{time}}
          include_role:
           name: common/send_email
          vars:
           mail_subject: Failed to perform tasks for {{ scan_name }}
-          mail_body: 'Hi team, failed to perform report generation tasks for completed scan {{ scan_name }} '
+          mail_body: 'Failed to perform report generation tasks for completed scan {{ scan_name }} '
         #  mail:
         #   host: smtp.gmail.com
         #   port: 587
@@ -142,4 +148,4 @@
        - name: Abort this role tasks execution if no scan was triggered {{date}} {{time}}
          fail:
           msg: Aboring playbook execution, as scan launch failed
-         when: '{{ output1.status }} != 201 or {{ output2.status }} != 200 or {{ output3.status }} != 200 or {{ site_assets.status }} != 200'
+         when: output1.status != 201 or  output2.status  != 200 or  output.status  != 200 or  site_assets.status != 200

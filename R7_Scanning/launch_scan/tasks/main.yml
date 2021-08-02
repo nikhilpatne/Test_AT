@@ -12,7 +12,7 @@
         include: get_all_ids.yml
 
       - name: Trigger Scan on provided scan site assets
-        include: trigger_scan.yml
+        include: trigger_scan1.yml
     # always:
     #  - name: Create a log file for scan process
     #    include: generate_report/tasks/logs.yml

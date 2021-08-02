@@ -15,7 +15,7 @@ report_req_body : {
       "version": "2.3.0"
 
   }
-retry_no: 30
+retry_no: 100
 delay_time: 120
 #report_directory: root/Rapid7_Scan_Reports2
 report_directory: var/log/Rapid7_Scan_Reports

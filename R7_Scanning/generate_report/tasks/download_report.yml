@@ -31,4 +31,4 @@
         name: common/send_email
        vars:
         mail_subject: Failed to download report from Rapid7 InsightVM
-        mail_body: 'Hi team, download report from Rapid7 InsightVM on Ansible Tower VM task failed. Following is the issue: {{ output3.content }}'
+        mail_body: 'Downloading report from Rapid7 InsightVM on Ansible Tower VM has failed. Following is the issue: {{ output3.content }}'
