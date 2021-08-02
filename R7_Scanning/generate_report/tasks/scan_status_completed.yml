@@ -58,20 +58,19 @@
            force_basic_auth: yes
            status_code: 201
           register: output1
-
-
+       
         - name: Send email if report not configured due to some issue
           include_role:
             name: common/send_email
           vars:
-            mail_subject: Failed to create Scan Report for completed scan {{ scan_name }}.
-            mail_body: '<p> Report {{ scan_report_name }} for completed scan {{ scan_name }} could not be configured, as the issue was {{ output1.json.message }}. Please check the log file for more details, sent on a seperate email. '
-          when: output1.status != 201
+            mail_subject: Scan Report configuration for completed scan {{ scan_name }} failed.
+            mail_body: '<p> Failed to configure report {{ scan_report_name }} for completed scan {{ scan_name }}. The issue was:- {{ output1.json.message }}. Please check the log file for more details, sent on a seperate email. '
+          when: output1.status !=201
         
         - name: Abort report generation tasks
           fail:
-            msg: "Aborting report generation tasks, as there was an issue:- {{ output1.json.message }}."
-          when: output1.status != 201  
+           msg: "Aborting report generation tasks, as there was an issue:- {{ output1.json.message }}."
+          when: output1.status !=201
       
         - name: Get configured report id {{date}} {{time}}
           set_fact:
@@ -148,8 +147,8 @@
          include_role:
           name: common/send_email
          vars:
-          mail_subject: Failed to perform report generation tasks for {{ scan_name }}
-          mail_body: 'Failed to perform report generation tasks for completed scan {{ scan_name }}. The issue was:- {{ output2.json.message }}. Please check log file for more details, sent on a seperate email. '
+          mail_subject: Failed to perform tasks for {{ scan_name }}
+          mail_body: 'Failed to perform report generation tasks for completed scan {{ scan_name }} with error:- {{ output2.json.message }}. Please check log file for more details ,sent on a seperate email. '
         #  mail:
         #   host: smtp.gmail.com
         #   port: 587
@@ -160,7 +159,7 @@
         #   body: 'Hi team, failed to perform report generation tasks for completed scan {{ scan_name }} '
         # delegate_to: localhost
           
-       - name: Abort this role tasks execution if scan report generation tasks failed {{date}} {{time}}
+       - name: Abort this role tasks execution if no scan was triggered {{date}} {{time}}
          fail:
-          msg: Aborting playbook execution, as report generation tasks failed, with error:- {{ output2.json.message }}
-         when: output1.status != 201 or  output2.status  != 200 or  output.status  != 200 
+          msg: "Aborting playbook execution, as report generation failed with error:- {{ output2.json.message }}"
+         when: output1.status != 201 or  output2.status  != 200 or  output.status  != 200

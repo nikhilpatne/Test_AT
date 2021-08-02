@@ -88,7 +88,7 @@
         #     body_format: json
         #     body: '{
         #       "values": {
-        #     "Detailed Description": "Please find the Scan Report url to download {{ report_url }} ,authenticate by Rapid7 credentials.",
+        #     "Detailed Description": "Scan report url https://{{insightvm_host}}/api/3/reports/{{configured_report_id}}/history/{{report_instance_id}}/output",
         #     "z1D_Action": "CREATE",
         #     "First Name": "{{ first_name }}",
         #     "Last Name": "{{ last_name }}",
@@ -96,14 +96,14 @@
         #     "Status": "Assigned",
         #     "TU_ReportedSource": "Direct Input",
         #     "RequesterLoginID": "{{ requester_loginid }}",
-        #     "Assignee Groups": "{{ wo_assignee_group_id }}"
+        #     "Assignee Groups" : "{{ wo_assignee_group_id }}"
         #     }}'
         #     status_code: 201
         #   register: work_order_created
         # - debug:
         #   msg: "WO Response:- {{work_order_created}}"
         
-        #task to send an email aftr WO creation, if needed.
+        #task to send email after WO creation if needeed.
         # - name: Send an email with report
         #   include_role:
         #     name: common/send_email
@@ -121,12 +121,12 @@
          name: common/send_email
         vars:
          mail_subject: Failed to create a work order on bmc Remedy ITSM for {{scan_name}}
-         mail_body: 'Failed to create work order on bmc Remedy ITSM for {{scan_site_name}} and scan name {{scan_name}}.Please check log file for more details,sent on a seperate email.'
+         mail_body: 'Failed to create work order on bmc Remedy ITSM for {{scan_site_name}} and scan name {{scan_name}} .Please check log file that will be sent on a seperate email'
         
           
-      - name: Abort this role tasks execution if no work order was created{{date}} {{time}}
+      - name: Abort this role tasks execution if no scan was triggered {{date}} {{time}}
         fail:
-          msg: Aborting playbook execution, as scan launch failed
+          msg: Aborting playbook execution, as work order did not get created
         when:  authorised_token.status  != 201 or  work_order_created.status  != 201
     
  

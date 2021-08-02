@@ -51,10 +51,11 @@
           name: common/send_email
         vars:
           mail_subject: Failed to get details for asset ipv4 address {{item}}
-          mail_body: 'Failed to get vulnerability details for asset {{item}} after scan {{scan_name}} .Please check log file that will be sent on a seperate email'
+          mail_body: 'Failed to get vulnerability details for asset {{item}} after scan {{scan_name}}. The issue is:- {{ assets.json.message }}. Please check log file,sent on a seperate email.'
         
           
       - name: Abort this role tasks execution if no details of {{item}} found {{date}} {{time}}
         fail:
-          msg: Aborting playbook execution, as no vulnerability details for {{item}} were found
+          msg: Aborting playbook execution, as no vulnerability details for {{item}} were found. The issue was:- {{ assets.json.message }}
         when:  assets.status != 200
+ 

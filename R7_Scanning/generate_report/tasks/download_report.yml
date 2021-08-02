@@ -6,43 +6,43 @@
   - name: Include lauch scan role vars
     include_vars: ../vars/report_req_vars.yml
     no_log: True
+  
   - block:
       - name: Get Report File downloadable url 
         uri: 
-          url: https://{{insightvm_host}}/api/3/reports/{{configured_report_id}}/history/{{report_instance_id}}
-          user: "{{insightvm_user}}"
-          password: "{{insightvm_password}}"
-          force_basic_auth: yes
-          validate_certs: no
-          return_content: yes
-          method: GET
+         url: https://{{insightvm_host}}/api/3/reports/{{configured_report_id}}/history/{{report_instance_id}}
+         user: "{{insightvm_user}}"
+         password: "{{insightvm_password}}"
+         force_basic_auth: yes
+         validate_certs: no
+         return_content: yes
+         method: GET
         register: report_details
         until: '"{{ report_details.json.status }}" != "running" '
         retries:  "{{ retry_no }}"
         delay: "{{ delay_time }}"
-
-          
+        
       - name: Set the report url
         set_fact:
           report_url: "{{ report_details.json.uri }}"
       - debug: 
-          msg: "Report generation status: {{ report_details.json.status }},Report details:{{ report_details.content }}, Report file download url: {{ report_url }}"
+          msg: "Report generation status: {{ report_details.json.status }}, Report details:{{ report_details.content }}, Report file download url: {{ report_url }}"
     rescue:
       - name: Send an email if any task fails {{date}} {{time}}
         include_role:
-        name: common/send_email
+         name: common/send_email
         vars:
-          mail_subject: Failed to get report file url link from Rapid7 InsightVM
-          mail_body: 'Task to get report file url link from Rapid7 InsightVM has failed. Following is the issue: {{ report_details.json.message }}.Please check log file that will be sent on a seperate email'
-      - name: Abort this role tasks as failed to get report url  {{date}} {{time}}
-        fail:
-         msg: "Aborting playbook execution, as failed to get report url with error:- {{ report_details.json.message }}"
-        when: report_details.status != 200
-
+         mail_subject: Failed to get report file url link from Rapid7 InsightVM
+         mail_body: 'Task to get report file url link from Rapid7 InsightVM has failed. Following is the issue: {{ report_details.json.message }}.Please check log file that will be sent on a seperate email'
      
+      - name: Abort this role tasks as failed to get report url {{date}} {{time}}
+        fail:
+         msg: "Aborting playbook execution, as report download task failed to get report url with error:- {{ report_details.json.message }}"
+        when: report_details.status != 200
+       
+         
 
-
-  - block:     
+  - block:
       - name: Download scan report {{date}} {{time}}
         uri:
           url: https://{{insightvm_host}}/api/3/reports/{{configured_report_id}}/history/{{report_instance_id}}/output
@@ -67,9 +67,9 @@
         name: common/send_email
        vars:
         mail_subject: Failed to download report from Rapid7 InsightVM
-        mail_body: 'Downloading report from Rapid7 InsightVM on Ansible Tower VM has failed. Following is the issue: {{ output3.json.message }}'
-
-     - name: Abort report downloading tasks
+        mail_body: 'Downloading report task from Rapid7 InsightVM on Ansible Tower VM has failed. Following is the issue: {{ output3.json.message }}.Please check log file that will be sent on a seperate email'
+     
+     - name: Abort this role tasks as report downloading failed {{date}} {{time}}
        fail:
-         msg: "Aborting report downloading tasks, as there was an issue:- {{ output3.json.message }}."
-       when: output3.json.status != 200   
+        msg: "Aborting playbook execution, as report download task failed with error:- {{ output3.json.message }}"
+       when: output3.status != 200

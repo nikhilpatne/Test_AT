@@ -18,7 +18,6 @@ email_template: '<!DOCTYPE html>
 <p><b>Hello Team,</b></p>
 <br>
 {{ mail_body }}
-<a href="url">link text</a>
 <div class=regards>
 <p>Regards,</p>
 <p>Transunion CIBIL Team</p>
@@ -32,4 +31,4 @@ email_template: '<!DOCTYPE html>
 </body>
 </html>'
 
-receiver_email: aishwarya.bhosale@gslab.com
+
