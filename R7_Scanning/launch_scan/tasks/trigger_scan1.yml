@@ -36,8 +36,8 @@
         include_role:
          name: common/send_email
         vars:
-         mail_subject: Failed to launch scan on requested site
-         mail_body: 'Requested scan was not triggered on this site {{scan_site_name}}. Please check the log file for more details.'
+         mail_subject: Failed to launch scan on requested site {{scan_site_name}}
+         mail_body: 'Requested scan was not triggered on this site {{scan_site_name}}.The issue is {{ launched_scan.json.message }} Please check the log file for more details,sent in an seperate email.'
         # mail:
         #   host: smtp.gmail.com
         #   port: 587
@@ -50,7 +50,7 @@
     
       - name: Abort this role tasks execution if no scan was triggered {{date}} {{time}}
         fail:
-          msg: Aboring playbook execution, as scan launch failed
-        when:  site_check_assets.status != 200 or launched_scan.status != 201 or site_check_asset.status  != 200
+          msg: Aborting playbook execution, as scan launch task failed with error:- {{ launched_scan.json.message }}
+        when: launched_scan.status != 201
      
        

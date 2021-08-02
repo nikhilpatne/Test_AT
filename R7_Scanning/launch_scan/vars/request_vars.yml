@@ -14,3 +14,4 @@ request_full_scan: {
 date: "{{ lookup('pipe', 'date +%Y-%m-%d')}}"
 time: "{{ lookup('pipe', 'date +%H:%M:%S')}}"
 #valid_ip_list: []
+host_csv_file_path: home/Host_CSV_Files
